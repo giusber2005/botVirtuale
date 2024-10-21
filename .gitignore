@@ -55,3 +55,6 @@ build/
 # Ignore coverage reports
 coverage/
 *.lcov
+
+#ignore annotation file 
+problems.txt
