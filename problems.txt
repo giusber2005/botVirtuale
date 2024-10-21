@@ -1,0 +1,23 @@
+ANNOTATIONS
+
+
+if the login has already happened, jump over that part
+
+clean the code
+resolve the default google chrome mode problem
+remove the login and modules informations for the test part
+remove the .env file 
+change the way the key is used before testing
+test the application
+deploy it
+
+giuseppe.berardi3@studio.unibo.it
+///--ciaociaociao34
+45323
+
+
+echo "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" | docker secret create openai_api_key -
+
+docker stack deploy -c docker-compose.yml virtualebot
+
+m3j21oif57cbmfv3dwd19tv1f

@@ -1,0 +1,57 @@
+# Ignore environment variable files
+.env
+.env.local
+.env.*.local
+
+# Ignore macOS system files
+.DS_Store
+
+# Ignore cache and temp files
+.cache/
+*.log
+*.tmp
+*.swp
+*.swo
+*.pid
+*.seed
+*.pyc
+*.pyo
+__pycache__/
+
+# Ignore IDE and editor specific files
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Ignore Python virtual environment
+venv/
+env/
+.virtualenv/
+
+# Ignore database-related files (SQLite)
+*.db
+*.sqlite3
+
+# Ignore compiled code (C, C++)
+*.o
+*.out
+*.a
+*.so
+
+# Ignore log and debug files
+debug.log
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# Ignore node_modules
+node_modules/
+
+# Ignore build directories
+dist/
+build/
+
+# Ignore coverage reports
+coverage/
+*.lcov

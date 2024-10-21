@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  virtualebot:
+    image: virtualebot:latest  # Reference the built image
+    secrets:
+      - openai_api_key
+    volumes:
+      - .:/app
+    command: >
+      sh -c "export OPENAI_API_KEY=$$(cat /run/secrets/openai_api_key) && python virtuale_bot.py"
+    depends_on:
+      - db
+
+  db:
+    image: sqlite:latest
+    volumes:
+      - ./database/virtualeStore.db:/data/virtualeStore.db
+
+secrets:
+  openai_api_key:
+    external: true
+
