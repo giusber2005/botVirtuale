@@ -1,5 +1,6 @@
 import openai
 import time
+from tqdm import tqdm
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -93,6 +94,7 @@ def watchcourse(module, driver, homepageId):
     except Exception as e:
         print("Error finding 'Riprendi' button:", e)
 
+    progress_bar = tqdm(total=100, desc="Progress", bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt}")
 
     # Step 3: Monitor progress bar for aria-valuetext="100%"
     while True:
@@ -101,12 +103,18 @@ def watchcourse(module, driver, homepageId):
             progress_input = WebDriverWait(driver, 20).until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, 'input[type="range"][aria-label="avanzamento diapositiva"]'))
             )
-            progress_value = progress_input.get_attribute("aria-valuetext")
-            print(f"Progress: {progress_value}")  # To observe the progress in console
-
+            
+            # Get the current progress value
+            progress_value_text = progress_input.get_attribute("aria-valuetext")
+            progress_value = int(progress_value_text.replace("%", ""))  # Convert to an integer
+    
+            # Update tqdm progress bar
+            progress_bar.n = progress_value
+            progress_bar.refresh()  # Manually refresh to show the new progress
+    
             # Check if progress reached 100%
-            if progress_value == "100%":
-                print("Progress reached 100%! Clicking 'Next' button...")
+            if progress_value == 100:
+                print("\nProgress reached 100%! Clicking 'Next' button...")
                 
                 # Step 4: Click the "Next" button once progress is 100%
                 next_button = WebDriverWait(driver, 20).until(
@@ -114,6 +122,7 @@ def watchcourse(module, driver, homepageId):
                 )
                 next_button.click()
                 time.sleep(1)
+                break  # Exit the loop once the next button is clicked
             else:
                 # Wait before checking again
                 time.sleep(1)
@@ -121,6 +130,9 @@ def watchcourse(module, driver, homepageId):
         except Exception as e:
             print(f"Error: {e}")
             break
+    
+    #Close the tqdm progress bar once done
+    progress_bar.close()
         
     WebDriverWait(driver, 10).until(
         EC.url_contains("https://virtuale.unibo.it/")
