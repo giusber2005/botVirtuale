@@ -65,15 +65,18 @@ def watchcourse(module, driver, homepageId):
         scorm_form_button.click()
     
     except Exception as e:
-        print("Error navigating to the SCORM page:", e)
+        print("Error navigating to the SCORM page")
         print("This must be an introductory page or a page without videos to show")
         print("Redirecting to the homepage")
+        print("")
         
         WebDriverWait(driver, 10).until(
             EC.url_contains("https://virtuale.unibo.it/")
         )
         driver.get(f"https://virtuale.unibo.it/course/view.php?id={homepageId}")
         
+        print("Module", module, "skipped")
+        print("")
         return
     
     WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "scorm_object")))
@@ -95,8 +98,9 @@ def watchcourse(module, driver, homepageId):
         print("Error finding 'Riprendi' button:", e)
 
     progress_bar = tqdm(total=100, desc="Progress", bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt}")
-
+    
     # Step 3: Monitor progress bar for aria-valuetext="100%"
+    counter = 0
     while True:
         try:
             # Wait until the input element representing the progress bar is present
@@ -104,9 +108,20 @@ def watchcourse(module, driver, homepageId):
                 EC.presence_of_element_located((By.CSS_SELECTOR, 'input[type="range"][aria-label="avanzamento diapositiva"]'))
             )
             
+            if counter == 0:
+                time.sleep(4)  # Wait for the progress bar to update initially
+                counter += 1
+                
+            progress_input = WebDriverWait(driver, 20).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, 'input[type="range"][aria-label="avanzamento diapositiva"]'))
+            )
+                          
             # Get the current progress value
             progress_value_text = progress_input.get_attribute("aria-valuetext")
-            progress_value = int(progress_value_text.replace("%", ""))  # Convert to an integer
+            if progress_value_text:
+                progress_value = int(progress_value_text.replace("%", ""))  # Convert to an integer
+            else:
+                progress_value = 0
     
             # Update tqdm progress bar
             progress_bar.n = progress_value
@@ -130,6 +145,9 @@ def watchcourse(module, driver, homepageId):
         except Exception as e:
             print(f"Error: {e}")
             break
+        
+    print(f"Module {module} watched")
+    print("")
     
     #Close the tqdm progress bar once done
     progress_bar.close()

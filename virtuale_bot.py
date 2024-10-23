@@ -43,7 +43,11 @@ chrome_options = Options()
 driver = webdriver.Chrome(service=Service(), options=chrome_options)
 """
 
-driver = webdriver.Chrome()
+chrome_options = Options()
+
+#chrome_options.add_argument("--headless")  # Run in headless mode
+
+driver = webdriver.Chrome(options=chrome_options)
 
 # Step 1: Navigate to the main page and go to the login page
 driver.get("https://virtuale.unibo.it/")
@@ -89,17 +93,21 @@ print("Found", len(course_sections), "course sections")
 print("Starting to watch the course modules...")
 print("This may take some time depending on the course content.")
 print("Please do not close the browser window.")
-
+print("")
 
 # Iterate over each 'courseindex-section' element
 for section in course_sections:
+    
     # Find elements whose id starts with 'course-index-cm-' followed by a number
     matching_elements = WebDriverWait(driver, 10).until(
         EC.presence_of_all_elements_located((By.XPATH, ".//*[starts-with(@id, 'course-index-cm-')]"))
     )
-            
+    
+    print("Found", len(matching_elements), "course modules")
+    print("")
+    
     for counter in range(len(matching_elements)):
-        matching_elements2 = WebDriverWait(driver, 10).until(
+        matching_elements2 = WebDriverWait(driver, 60).until(
             EC.presence_of_all_elements_located((By.XPATH, ".//*[starts-with(@id, 'course-index-cm-')]"))
         )
         
@@ -123,6 +131,8 @@ for section in course_sections:
                 )
                 
                 print(f"Module {number} is already marked as done")
+                print("")
+                
                 insertLink(cursor, number)
                 continue  # Skip to the next iteration if already done
             except:
@@ -135,8 +145,8 @@ for section in course_sections:
                     insertLink(cursor, number)
                     connection.commit()
                 
+                print(f"Watching module {number}...")
                 watchcourse(number, driver, module)
-                print(f"Module {number} watched")
             else:
                 print(f"Module {number} already watched")
 
