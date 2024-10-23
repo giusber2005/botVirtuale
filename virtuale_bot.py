@@ -109,6 +109,8 @@ for section in course_sections:
         match = re.search(r'course-index-cm-(\d+)', elementId)
         if match:
             number = match.group(1)
+            
+            done_icon = None
             try:
                 # Use WebDriverWait to wait for the parent element
                 parent_element = WebDriverWait(driver, 10).until(
@@ -128,9 +130,10 @@ for section in course_sections:
                 pass
             
             # If not done, proceed with checking and watching the course
-            if not checkLink(cursor, number):
-                insertLink(cursor, number)
-                connection.commit()
+            if not checkLink(cursor, number) or not done_icon:
+                if not checkLink(cursor, number):
+                    insertLink(cursor, number)
+                    connection.commit()
                 
                 watchcourse(number, driver, module)
                 print(f"Module {number} watched")
