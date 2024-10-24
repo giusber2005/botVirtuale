@@ -95,21 +95,22 @@ print("This may take some time depending on the course content.")
 print("Please do not close the browser window.")
 print("")
 
+
 # Iterate over each 'courseindex-section' element
-for section in course_sections:
+for section_num in range(len(course_sections)):    
+    print("-----------------------------------")
+    print(f"Section {section_num}")
+    print("-----------------------------------")
     
-    # Find elements whose id starts with 'course-index-cm-' followed by a number
-    matching_elements = WebDriverWait(driver, 10).until(
-        EC.presence_of_all_elements_located((By.XPATH, ".//*[starts-with(@id, 'course-index-cm-')]"))
-    )
-    
-    print("Found", len(matching_elements), "course modules")
+
+    # Check for visible elements in the current section
+    matching_elements = elements_loader(driver, True, section_num)
     print("")
-    
+    if matching_elements == 0:
+        continue
+
     for counter in range(len(matching_elements)):
-        matching_elements2 = WebDriverWait(driver, 60).until(
-            EC.presence_of_all_elements_located((By.XPATH, ".//*[starts-with(@id, 'course-index-cm-')]"))
-        )
+        matching_elements2 = elements_loader(driver, False, section_num)
         
         element = matching_elements2[counter]
         elementId = element.get_attribute("id")
@@ -130,6 +131,7 @@ for section in course_sections:
                     EC.presence_of_element_located((By.XPATH, ".//i[contains(@class, 'icon fa fa-circle fa-fw') and @title='Done']"))
                 )
                 
+                print(done_icon.get_attribute("title"))
                 print(f"Module {number} is already marked as done")
                 print("")
                 

@@ -8,6 +8,8 @@ from selenium.webdriver.support import expected_conditions as EC
 from dotenv import load_dotenv
 import os
 
+from selenium.common.exceptions import TimeoutException, NoSuchElementException
+
 
 
 """ 
@@ -158,6 +160,38 @@ def watchcourse(module, driver, homepageId):
     driver.get(f"https://virtuale.unibo.it/course/view.php?id={homepageId}")
     
     time.sleep(3) 
+    
+def elements_loader(driver, first, section_num):
+    course_section = WebDriverWait(driver, 20).until(
+        EC.presence_of_element_located((By.CLASS_NAME, 'courseindex-section'))
+    )
+
+    # Find all elements with the class 'courseindex-section'
+    course_sections = driver.find_elements(By.CLASS_NAME, 'courseindex-section')
+    section = course_sections[section_num]
+    
+    # Check for visible elements in the current section
+    try:
+        # Wait for the content of the current section to be visible
+        section_content = WebDriverWait(section, 20).until(
+            EC.presence_of_element_located((By.CLASS_NAME, 'courseindex-item-content'))
+        )
+
+        # Find all course modules within the section
+        matching_elements = WebDriverWait(section_content, 20).until(
+            EC.presence_of_all_elements_located((By.XPATH, ".//li[starts-with(@id, 'course-index-cm-')]"))
+        )
+        
+        if first:
+            print("Found", len(matching_elements), "course modules in this section")
+        
+        return matching_elements
+    except TimeoutException:
+        if first:
+            print(f"Timeout: No course modules found in section {section_num}.")
+        
+        return 0 # Skip to the next section if no modules are found
+    
 
 def AutoTest(driver):
     # Step 1: click the "Attempt quiz" button
