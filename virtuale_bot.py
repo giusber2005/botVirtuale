@@ -14,7 +14,6 @@ from storeFunctions import *
 from helpers import *
 
 import time
-import getpass
 import re
 
 import sqlite3 
@@ -119,19 +118,20 @@ for section_num in range(len(course_sections)):
         if match:
             number = match.group(1)
             
-            done_icon = None
+            icon_state = None
             try:
                 # Use WebDriverWait to wait for the parent element
                 parent_element = WebDriverWait(driver, 10).until(
                     EC.presence_of_element_located((By.XPATH, f"//*[@id='{elementId}']/.."))
                 )
                 
+                
                 # Now, within the parent element, wait for the icon with title "Done"
-                done_icon = WebDriverWait(parent_element, 10).until(
-                    EC.presence_of_element_located((By.XPATH, ".//i[contains(@class, 'icon fa fa-circle fa-fw') and @title='Done']"))
+                icon_state = WebDriverWait(parent_element, 10).until(
+                    EC.presence_of_element_located((By.CLASS_NAME, "completion_complete"))
                 )
                 
-                print(done_icon.get_attribute("title"))
+                print(icon_state.get_attribute("class"))
                 print(f"Module {number} is already marked as done")
                 print("")
                 

@@ -99,7 +99,7 @@ def watchcourse(module, driver, homepageId):
     except Exception as e:
         print("Error finding 'Riprendi' button:", e)
 
-    progress_bar = tqdm(total=100, desc="Progress", bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt}")
+    progress_bar = tqdm(total=100, desc="Progress", bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt}", initial=0)
     
     # Step 3: Monitor progress bar for aria-valuetext="100%"
     counter = 0
@@ -132,20 +132,26 @@ def watchcourse(module, driver, homepageId):
             # Check if progress reached 100%
             if progress_value == 100:
                 print("\nProgress reached 100%! Clicking 'Next' button...")
-                
-                # Step 4: Click the "Next" button once progress is 100%
-                next_button = WebDriverWait(driver, 20).until(
-                    EC.element_to_be_clickable((By.CSS_SELECTOR, "button#next:not([aria-disabled='true'])"))
-                )
-                next_button.click()
-                time.sleep(1)
-                break  # Exit the loop once the next button is clicked
+                print("")
+
+                try:
+                    # Step 4: Click the "Next" button once progress is 100%
+                    next_button = WebDriverWait(driver, 20).until(
+                        EC.element_to_be_clickable((By.CSS_SELECTOR, "button#next:not([aria-disabled='true'])"))
+                    )
+                    next_button.click()
+                    time.sleep(1)
+                    break  # Exit the loop once the next button is clicked
+                except Exception as e:
+                    print("There is no Next Button, we have reached to end of this module")
+                    print("")
+                    break
             else:
                 # Wait before checking again
                 time.sleep(1)
 
         except Exception as e:
-            print(f"Error: {e}")
+            print("Error monitoring the progress bar:", e)
             break
         
     print(f"Module {module} watched")
