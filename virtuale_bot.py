@@ -25,7 +25,9 @@ createTable(cursor)
 connection.commit()
 
 f = Figlet(font='speed')
-print(f.renderText('Virtuale Bot'))
+red = "\033[91m"
+reset = "\033[0m"
+print(f"{red}{f.renderText('Virtuale Bot')}{reset}")
 
 
 username = "giuseppe.berardi3@studio.unibo.it" #input("Enter your UNIBO username: ")
@@ -122,16 +124,14 @@ for section_num in range(len(course_sections)):
             try:
                 # Use WebDriverWait to wait for the parent element
                 parent_element = WebDriverWait(driver, 10).until(
-                    EC.presence_of_element_located((By.XPATH, f"//*[@id='{elementId}']/.."))
+                     EC.presence_of_element_located((By.XPATH, f"//*[@id='{elementId}']"))
                 )
-                
-                
+
                 # Now, within the parent element, wait for the icon with title "Done"
                 icon_state = WebDriverWait(parent_element, 10).until(
                     EC.presence_of_element_located((By.CLASS_NAME, "completion_complete"))
                 )
-                
-                print(icon_state.get_attribute("class"))
+
                 print(f"Module {number} is already marked as done")
                 print("")
                 
@@ -142,7 +142,7 @@ for section_num in range(len(course_sections)):
                 pass
             
             # If not done, proceed with checking and watching the course
-            if not checkLink(cursor, number) or not done_icon:
+            if not checkLink(cursor, number) or not icon_state:
                 if not checkLink(cursor, number):
                     insertLink(cursor, number)
                     connection.commit()
