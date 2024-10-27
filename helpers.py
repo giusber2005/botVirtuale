@@ -51,14 +51,6 @@ def watchcourse(module, driver, homepageId):
             EC.url_contains("https://virtuale.unibo.it/")
         )
         driver.get(f"https://virtuale.unibo.it/mod/scorm/view.php?id={module}")
-
-    
-        h1_elements = driver.find_elements(By.TAG_NAME, 'h1')
-        for h1 in h1_elements:
-            if "Test" in h1.text:
-                AutoTest(driver)
-                print("Test completed")
-                return
             
         # Step 2: Submit the SCORM form to start the content
         scorm_form_button = WebDriverWait(driver, 10).until(
@@ -251,4 +243,6 @@ def AutoTest(driver):
     )
     submit_button_confirm.click()
     
+    print("Quiz completed successfully")
+    print("")
     return True

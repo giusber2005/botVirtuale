@@ -126,7 +126,13 @@ for section_num in range(len(course_sections)):
                 parent_element = WebDriverWait(driver, 10).until(
                      EC.presence_of_element_located((By.XPATH, f"//*[@id='{elementId}']"))
                 )
-
+                
+                print(parent_element.get_attribute("id"))
+                if "quiz" in parent_element.get_attribute("id"):
+                    response = AutoTest(driver)
+                    insertLink(cursor, number)
+                    continue
+                
                 # Now, within the parent element, wait for the icon with title "Done"
                 icon_state = WebDriverWait(parent_element, 10).until(
                     EC.presence_of_element_located((By.CLASS_NAME, "completion_complete"))
