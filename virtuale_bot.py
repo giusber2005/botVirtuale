@@ -1,3 +1,4 @@
+#libraries to work with the browser
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -8,16 +9,23 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 import chromedriver_autoinstaller
 
+#libary to create a banner
 from pyfiglet import Figlet
 
+#libraries to work with the database
 from storeFunctions import *
+import sqlite3 
+
+#functions to work with the bot
 from helpers import *
 
+#libraries to manage sleep time and re expressions
 import time
 import re
 
-import sqlite3 
-
+print("Starting the program...")
+print("Connecting to the database...")
+print("")
 connection = sqlite3.connect('./database/virtualeStore.db')
 
 cursor = connection.cursor()
@@ -51,9 +59,13 @@ chrome_options = Options()
 driver = webdriver.Chrome(options=chrome_options)
 
 # Step 1: Navigate to the main page and go to the login page
+print("Navigating to the main page...")
+print("")
 driver.get("https://virtuale.unibo.it/")
 time.sleep(2)
 
+print("Logging in...")
+print("")
 # Step 2: Click the "Log in" link
 login_link = driver.find_element(By.LINK_TEXT, "Log in")
 login_link.click()
@@ -64,19 +76,31 @@ unibo_button = WebDriverWait(driver, 10).until(
 )
 unibo_button.click()
 
-# Step 4: Enter username and password in the login form
-username_input = WebDriverWait(driver, 10).until(
-    EC.presence_of_element_located((By.ID, "userNameInput"))
-)
-password_input = driver.find_element(By.ID, "passwordInput")
+try:
+    # Step 4: Enter username and password in the login form
+    username_input = WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.ID, "userNameInput"))
+    )
+    password_input = driver.find_element(By.ID, "passwordInput")
 
-# Enter your UNIBO credentials
-username_input.send_keys(username)  
-password_input.send_keys(password)  
+    # Enter your UNIBO credentials
+    username_input.send_keys(username)  
+    password_input.send_keys(password)  
 
-# Submit the form by pressing Enter
-password_input.send_keys(Keys.RETURN)
+    # Submit the form by pressing Enter
+    password_input.send_keys(Keys.RETURN)
+except Exception as e:
+    print("Error logging in:", e)
+    print("Please check your credentials and try again.")
+    print("Exiting the program...")
+    driver.quit()
+    exit()
 
+print("Logged in successfully")
+print("")
+
+print("Navigating to the course page...")
+print("")
 # Step 5: Navigate to the page of the current course
 WebDriverWait(driver, 10).until(
     EC.url_contains("https://virtuale.unibo.it/")
@@ -120,41 +144,65 @@ for section_num in range(len(course_sections)):
         if match:
             number = match.group(1)
             
-            icon_state = None
-            try:
-                # Use WebDriverWait to wait for the parent element
-                parent_element = WebDriverWait(driver, 10).until(
-                     EC.presence_of_element_located((By.XPATH, f"//*[@id='{elementId}']"))
-                )
-                
-                print(parent_element.get_attribute("id"))
-                if "quiz" in parent_element.get_attribute("id"):
-                    response = AutoTest(driver)
-                    insertLink(cursor, number)
-                    continue
-                
-                # Now, within the parent element, wait for the icon with title "Done"
-                icon_state = WebDriverWait(parent_element, 10).until(
-                    EC.presence_of_element_located((By.CLASS_NAME, "completion_complete"))
-                )
+            if not checkLink(cursor, number):
+                icon_state = None
+                try:
+                    # Use WebDriverWait to wait for the parent element
+                    parent_element = WebDriverWait(driver, 10).until(
+                        EC.presence_of_element_located((By.XPATH, f"//*[@id='{elementId}']"))
+                    )
+                    
+                    try:
+                        print(f"Checking if module {number} is already marked as done...")
+                        # Now, within the parent element, wait for the icon with title "Done"
+                        icon_state = WebDriverWait(parent_element, 10).until(
+                            EC.presence_of_element_located((By.CLASS_NAME, "completion_complete"))
+                        )
 
-                print(f"Module {number} is already marked as done")
-                print("")
-                
+                        print(f"Module {number} is already marked as done")
+                        print("")
+                        
+                        insertLink(cursor, number)
+                        connection.commit()
+                        continue  # Skip to the next iteration if already done
+                    except:
+                        print(f"Module {number} is not marked as done")
+                        print("")
+                        # If the 'Done' icon is not found, or some other error occurs, continue the process
+
+                        pass
+                    
+                    
+                    link_element = WebDriverWait(parent_element, 10).until(
+                        EC.presence_of_element_located((By.TAG_NAME, 'a'))
+                    )
+                    
+                    print("Checking if the module is a quiz...")
+                    if "quiz" in link_element.get_attribute("href"):
+                        WebDriverWait(driver, 10).until(
+                            EC.url_contains("https://virtuale.unibo.it/")
+                        )
+                        driver.get(f"https://virtuale.unibo.it/mod/quiz/view.php?id={number}")
+
+                        AutoTest(driver)
+                        
+                        insertLink(cursor, number)
+                        connection.commit()
+                        continue 
+                    else:
+                        print("Module is not a quiz")
+                        print("The module is a set of videos")
+                        print(f"Watching module {number}...")
+                        watchcourse(number, driver, module) 
+                except:
+                    print(f"Error watching module {number}")
+                    print("The module may be some other type of content")
+                    print("Continuing to the next module...")
+                    print("")
+                    # If the 'Done' icon is not found, or some other error occurs, continue the process
+                    pass
                 insertLink(cursor, number)
-                continue  # Skip to the next iteration if already done
-            except:
-                # If the 'Done' icon is not found, or some other error occurs, continue the process
-                pass
-            
-            # If not done, proceed with checking and watching the course
-            if not checkLink(cursor, number) or not icon_state:
-                if not checkLink(cursor, number):
-                    insertLink(cursor, number)
-                    connection.commit()
-                
-                print(f"Watching module {number}...")
-                watchcourse(number, driver, module)
+                connection.commit()
             else:
                 print(f"Module {number} already watched")
 
@@ -162,7 +210,8 @@ for section_num in range(len(course_sections)):
 
 
     
-print("program completed")
+print("Program completed")
+print("Bye Bye")
 cursor.close()
 connection.close()
 driver.quit()

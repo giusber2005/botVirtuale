@@ -1,8 +1,9 @@
+
 version: '3.8'
 
 services:
   virtualebot:
-    image: virtualebot:latest  # Reference the built image
+    image: virtualebot:latest
     secrets:
       - openai_api_key
     volumes:
@@ -11,6 +12,8 @@ services:
       sh -c "export OPENAI_API_KEY=$$(cat /run/secrets/openai_api_key) && python virtuale_bot.py"
     depends_on:
       - db
+    ports:
+      - "8080:80"  # Maps port 80 in the container to port 8080 on the host
 
   db:
     image: sqlite:latest

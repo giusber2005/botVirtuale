@@ -10,15 +10,6 @@ import os
 
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 
-
-
-""" 
-secret_path = "/run/secrets/openai_api_key"
-
-with open(secret_path, 'r') as secret_file:
-    key = secret_file.read().strip()
-"""
-
 load_dotenv()
 
 # Initialize the OpenAI API key
@@ -192,11 +183,14 @@ def elements_loader(driver, first, section_num):
     
 
 def AutoTest(driver):
+    print("Starting the quiz...")
     # Step 1: click the "Attempt quiz" button
-    attempt_button = WebDriverWait(driver, 20).until(
-        EC.element_to_be_clickable((By.XPATH, "//button[text()='Attempt quiz']"))
+    attempt_button = WebDriverWait(driver, 10).until(
+        EC.element_to_be_clickable((By.XPATH, ".//form[contains(@action, 'quiz') and @method='post']//button[@type='submit']"))
     )
     attempt_button.click()
+    
+    print("Quiz started")
     
     time.sleep(2)
     
@@ -207,9 +201,13 @@ def AutoTest(driver):
         )
         question_content = question_container.find_element(By.CLASS_NAME, "content")
         question_text = question_content.text
+        print("Question:", question_text)
+        print("")
         
+        print("Getting the answer...")
         # Get the correct response based on the question text
         response = get_quiz_answer(question_text)
+        print("Answer:", response)
         
         # Get all choices (radio buttons)
         choices = question_container.find_elements(By.XPATH, ".//input[@type='radio']")
