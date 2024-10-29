@@ -182,6 +182,12 @@ def elements_loader(driver, first, section_num):
         return 0 # Skip to the next section if no modules are found
     
 
+answers = {
+    "a": 0,
+    "b": 1,
+    "c": 2,
+    "d": 3
+}
 def AutoTest(driver):
     print("Starting the quiz...")
     # Step 1: click the "Attempt quiz" button
@@ -207,18 +213,25 @@ def AutoTest(driver):
         print("Getting the answer...")
         # Get the correct response based on the question text
         response = get_quiz_answer(question_text)
+        answer = answers[response]
         print("Answer:", response)
+        print("")
         
         # Get all choices (radio buttons)
-        choices = question_container.find_elements(By.XPATH, ".//input[@type='radio']")
+        print("Selecting the answer...")
+        choices = WebDriverWait(driver, 20).until(
+            EC.presence_of_all_elements_located((By.XPATH, ".//input[@type='radio']"))
+        )
+        print("Iterating through the choices...")
         for choice in choices:
-            # Compare the associated label text with the response
-            label = driver.find_element(By.XPATH, f"//label[@for='{choice.get_attribute('id')}']")
-            if label.text.strip().lower() == response.lower():
+            if choice.get_attribute("value") == answer:
                 choice.click()
+                print("Selected:", response)
+                print("")
                 break
         
         # Find and click the "Next page" or "Finish attempt" button
+        print("Moving to the next question...")
         next_button = WebDriverWait(driver, 20).until(
             EC.element_to_be_clickable((By.XPATH, "//input[@type='submit']"))
         )
@@ -226,15 +239,19 @@ def AutoTest(driver):
         if next_button.get_attribute("value") == "Next page":
             next_button.click()
         elif next_button.get_attribute("value") == "Finish attempt":
+            print("Last question reached. Attempting to finish the quiz...")
+            print("")
             next_button.click()
             break
     
     # Step 3: Submit all answers
+    print("Submitting the quiz...")
     submit_button = WebDriverWait(driver, 20).until(
         EC.element_to_be_clickable((By.XPATH, "//button[text()='Submit all and finish']"))
     )
     submit_button.click()
     
+    print("Confirming the submission...")
     # Confirm the submission in the modal dialog
     submit_button_confirm = WebDriverWait(driver, 20).until(
         EC.element_to_be_clickable((By.XPATH, "//div[contains(@class, 'modal-dialog')]//button[text()='Submit all and finish']"))

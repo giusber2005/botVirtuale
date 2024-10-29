@@ -205,6 +205,7 @@ for section_num in range(len(course_sections)):
                 connection.commit()
             else:
                 print(f"Module {number} already watched")
+                print("")
 
 
 
