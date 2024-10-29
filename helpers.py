@@ -82,9 +82,11 @@ def watchcourse(module, driver, homepageId):
     except Exception as e:
         print("Error finding 'Riprendi' button:", e)
 
+    # Initial wait to check if the progress truly starts at 100%
+    time.sleep(5)  # Wait to allow the content to load properly
+
     progress_bar = tqdm(total=100, desc="Progress", bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt}", initial=0)
-    
-    # Step 3: Monitor progress bar for aria-valuetext="100%"
+
     counter = 0
     while True:
         try:
@@ -93,27 +95,15 @@ def watchcourse(module, driver, homepageId):
                 EC.presence_of_element_located((By.CSS_SELECTOR, 'input[type="range"][aria-label="avanzamento diapositiva"]'))
             )
             
-            if counter == 0:
-                time.sleep(4)  # Wait for the progress bar to update initially
-                counter += 1
-                
-            progress_input = WebDriverWait(driver, 20).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, 'input[type="range"][aria-label="avanzamento diapositiva"]'))
-            )
-                          
             # Get the current progress value
             progress_value_text = progress_input.get_attribute("aria-valuetext")
             if progress_value_text:
                 progress_value = int(progress_value_text.replace("%", ""))  # Convert to an integer
             else:
                 progress_value = 0
-    
-            # Update tqdm progress bar
-            progress_bar.n = progress_value
-            progress_bar.refresh()  # Manually refresh to show the new progress
-    
-            # Check if progress reached 100%
-            if progress_value == 100:
+
+            # Confirm if the bar is at 100% and remains there
+            if progress_value == 100 and counter > 3:  # Allow some time to confirm progress
                 print("\nProgress reached 100%! Clicking 'Next' button...")
                 print("")
 
@@ -126,16 +116,21 @@ def watchcourse(module, driver, homepageId):
                     time.sleep(1)
                     break  # Exit the loop once the next button is clicked
                 except Exception as e:
-                    print("There is no Next Button, we have reached to end of this module")
+                    print("There is no Next Button, we have reached the end of this module")
                     print("")
                     break
-            else:
-                # Wait before checking again
-                time.sleep(1)
+
+            # Update tqdm progress bar
+            progress_bar.n = progress_value
+            progress_bar.refresh()  # Manually refresh to show the new progress
+
+            counter += 1
+            time.sleep(1)  # Wait before checking again
 
         except Exception as e:
             print("Error monitoring the progress bar:", e)
             break
+
         
     print(f"Module {module} watched")
     print("")
@@ -219,29 +214,47 @@ def AutoTest(driver):
         
         # Get all choices (radio buttons)
         print("Selecting the answer...")
-        choices = WebDriverWait(driver, 20).until(
+        choices_num = WebDriverWait(driver, 20).until(
             EC.presence_of_all_elements_located((By.XPATH, ".//input[@type='radio']"))
         )
         print("Iterating through the choices...")
-        for choice in choices:
-            if choice.get_attribute("value") == answer:
-                choice.click()
+        counter = 0
+        for choice in choices_num:
+            if choice.get_attribute("value") == str(answer):
+                choices = WebDriverWait(driver, 20).until(
+                    EC.presence_of_all_elements_located((By.XPATH, ".//input[@type='radio']"))
+                )
+                
+                choices[counter].click()
                 print("Selected:", response)
                 print("")
                 break
+            counter += 1
         
         # Find and click the "Next page" or "Finish attempt" button
         print("Moving to the next question...")
-        next_button = WebDriverWait(driver, 20).until(
-            EC.element_to_be_clickable((By.XPATH, "//input[@type='submit']"))
+        next_buttons_ids = WebDriverWait(driver, 20).until(
+            EC.presence_of_all_elements_located((By.XPATH, "//input[@type='submit']"))
         )
         
-        if next_button.get_attribute("value") == "Next page":
-            next_button.click()
-        elif next_button.get_attribute("value") == "Finish attempt":
-            print("Last question reached. Attempting to finish the quiz...")
-            print("")
-            next_button.click()
+        goOut = False
+        for counter in range(len(next_buttons_ids)):
+            next_buttons = WebDriverWait(driver, 20).until(
+                EC.presence_of_all_elements_located((By.XPATH, "//input[@type='submit']"))
+            )
+            # Check if the value contains "Next page"
+            if "Next page" in next_buttons[counter].get_attribute("value"):
+                print("Next question...")
+                next_buttons[counter].click()
+                print("Button clicked")
+                break
+            # Check if the value contains "Finish attempt"
+            elif "Finish attempt" in next_buttons[counter].get_attribute("value"):
+                print("Last question reached. Attempting to finish the quiz...")
+                next_buttons[counter].click()
+                goOut = True
+                break
+        if goOut:
             break
     
     # Step 3: Submit all answers
@@ -261,3 +274,6 @@ def AutoTest(driver):
     print("Quiz completed successfully")
     print("")
     return True
+
+    
+    
