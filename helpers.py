@@ -8,7 +8,8 @@ from selenium.webdriver.support import expected_conditions as EC
 from dotenv import load_dotenv
 import os
 
-from selenium.common.exceptions import TimeoutException, NoSuchElementException
+from selenium.common.exceptions import TimeoutException
+from storeFunctions import *
 
 load_dotenv()
 
@@ -34,7 +35,7 @@ def get_quiz_answer(quiz_string):
 
 
 
-def watchcourse(module, driver, homepageId):   
+def watchcourse(module, driver, homepageId, cursor):   
     
     try:
         # Step 1: Navigate to the SCORM page (after successful login)
@@ -80,15 +81,19 @@ def watchcourse(module, driver, homepageId):
             print("Riprendi button is not visible or enabled")
             
     except Exception as e:
-        print("Error finding 'Riprendi' button:", e)
-
-    # Initial wait to check if the progress truly starts at 100%
-    time.sleep(5)  # Wait to allow the content to load properly
-
-    progress_bar = tqdm(total=100, desc="Progress", bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt}", initial=0)
+        print("Error finding 'Riprendi' button:")
+        print("This must be the first video of the course")
+        print("")
+    
 
     counter = 0
     while True:
+        if counter == 0:
+            # Initial wait to check if the progress truly starts at 100%
+            time.sleep(5)  # Wait to allow the content to load properly
+            print("Starting the progress bar monitoring...")    
+            progress_bar = tqdm(total=100, desc="Progress", bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt}", initial=0)  
+            print("Here we go!")     
         try:
             # Wait until the input element representing the progress bar is present
             progress_input = WebDriverWait(driver, 20).until(
@@ -114,15 +119,21 @@ def watchcourse(module, driver, homepageId):
                     )
                     next_button.click()
                     time.sleep(1)
-                    break  # Exit the loop once the next button is clicked
+                    
+                    progress_bar.close()  # Close the progress bar
+                    counter = -1  # Reset the counter after clicking the "Next" button
                 except Exception as e:
                     print("There is no Next Button, we have reached the end of this module")
                     print("")
+                    
+                    driver.switch_to.default_content()
+                    insertLink(cursor, module)
                     break
 
-            # Update tqdm progress bar
-            progress_bar.n = progress_value
-            progress_bar.refresh()  # Manually refresh to show the new progress
+            if counter < 3:
+                # Update tqdm progress bar
+                progress_bar.n = progress_value
+                progress_bar.refresh()  # Manually refresh to show the new progress
 
             counter += 1
             time.sleep(1)  # Wait before checking again
@@ -130,13 +141,8 @@ def watchcourse(module, driver, homepageId):
         except Exception as e:
             print("Error monitoring the progress bar:", e)
             break
-
-        
     print(f"Module {module} watched")
     print("")
-    
-    #Close the tqdm progress bar once done
-    progress_bar.close()
         
     WebDriverWait(driver, 10).until(
         EC.url_contains("https://virtuale.unibo.it/")
@@ -183,7 +189,7 @@ answers = {
     "c": 2,
     "d": 3
 }
-def AutoTest(driver):
+def AutoTest(driver, number, cursor):
     print("Starting the quiz...")
     # Step 1: click the "Attempt quiz" button
     attempt_button = WebDriverWait(driver, 10).until(
@@ -271,6 +277,7 @@ def AutoTest(driver):
     )
     submit_button_confirm.click()
     
+    insertLink(cursor, number)
     print("Quiz completed successfully")
     print("")
     return True

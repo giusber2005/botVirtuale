@@ -169,7 +169,6 @@ for section_num in range(len(course_sections)):
                         print(f"Module {number} is not marked as done")
                         print("")
                         # If the 'Done' icon is not found, or some other error occurs, continue the process
-
                         pass
                     
                     
@@ -184,31 +183,26 @@ for section_num in range(len(course_sections)):
                         )
                         driver.get(f"https://virtuale.unibo.it/mod/quiz/view.php?id={number}")
 
-                        AutoTest(driver)
-                        
-                        insertLink(cursor, number)
-                        connection.commit()
+                        AutoTest(driver, number, cursor)
                         continue 
                     else:
                         print("Module is not a quiz")
                         print("The module is a set of videos")
                         print(f"Watching module {number}...")
-                        watchcourse(number, driver, module) 
+                        watchcourse(number, driver, module, cursor) 
                 except:
                     print(f"Error watching module {number}")
                     print("The module may be some other type of content")
                     print("Continuing to the next module...")
                     print("")
+                    
+                    insertLink(cursor, number)
                     # If the 'Done' icon is not found, or some other error occurs, continue the process
                     pass
-                insertLink(cursor, number)
                 connection.commit()
             else:
                 print(f"Module {number} already watched")
                 print("")
-
-
-
 
     
 print("Program completed")
