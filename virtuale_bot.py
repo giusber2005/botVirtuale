@@ -5,6 +5,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 
+from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 import chromedriver_autoinstaller
@@ -42,21 +43,22 @@ username = "giuseppe.berardi3@studio.unibo.it" #input("Enter your UNIBO username
 password = "///--ciaociaociao34" #getpass.getpass("Enter your UNIBO password: ")
 module = "45323" #input("Enter the course id: ")
 
-"""
-CODE TO RUN THE BOT IN GOOGLE CHROME DEFAULT MODE
-
-chromedriver_autoinstaller.install()
+chrome_path = find_chrome_path()
+if chrome_path is None:
+    print("Google Chrome is not installed or not found.")
+    exit(1)
+    
+# Set up Chrome options
 chrome_options = Options()
+chrome_options.add_argument("--headless")  # Optional: run in headless mode
+chrome_options.add_argument("--no-sandbox")  # Optional: for certain environments
+chrome_options.add_argument("--disable-dev-shm-usage")  # Optional: for certain environments
 
-# Set up WebDriver (assuming you're using Chrome)
-driver = webdriver.Chrome(service=Service(), options=chrome_options)
-"""
+chrome_options.binary_location = chrome_path
 
-chrome_options = Options()
+# Set up WebDriver
+driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
 
-#chrome_options.add_argument("--headless")  # Run in headless mode
-
-driver = webdriver.Chrome(options=chrome_options)
 
 # Step 1: Navigate to the main page and go to the login page
 print("Navigating to the main page...")

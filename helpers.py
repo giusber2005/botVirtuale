@@ -1,6 +1,7 @@
 import openai
 import time
 from tqdm import tqdm
+import subprocess
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -11,12 +12,24 @@ import os
 from selenium.common.exceptions import TimeoutException
 from storeFunctions import *
 
-load_dotenv()
+def find_chrome_path():
+    try:
+        # Use 'mdfind' to locate Google Chrome
+        path = subprocess.check_output(["mdfind", "Google Chrome"]).decode("utf-8").strip().splitlines()
+        
+        # Filter to find the correct path
+        for p in path:
+            if "Google Chrome.app" in p:
+                return p
+            
+        return None
+    except subprocess.CalledProcessError:
+        return None
 
+load_dotenv()
 # Initialize the OpenAI API key
 key = os.getenv("OPENAI_API_KEY")
 openai.api_key = key
-
 
 def get_quiz_answer(quiz_string):
     # Make an API call to OpenAI to get the answer
